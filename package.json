@@ -1,0 +1,24 @@
+{
+  "name": "SlackBot",
+  "version": "1.0.0",
+  "description": "My 2nd bot",
+  "main": "bot.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.o-in.dwango.co.jp:Morio-Yamada/SlackBot.git"
+  },
+  "author": "orzngo",
+  "license": "ISC",
+  "devDependencies": {
+    "gulp": "^3.8.11"
+  },
+  "dependencies": {
+    "config": "^1.12.0",
+    "cron": "^1.0.9",
+    "node-slackbot": "0.0.6",
+    "slack-node": "^0.1.0"
+  }
+}
