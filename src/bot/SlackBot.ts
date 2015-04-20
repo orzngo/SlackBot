@@ -2,24 +2,37 @@
 
 import IConfig = require('../config/IConfig');
 import IModule = require("./module/IModule");
+import IRTMMessage = require("./message/IRTMMessage");
+import ICommandMessage = require("./message/ICommandMessage");
 
 import EchoModule = require("./module/echo/EchoModule");
 import TimeSpeakerModule = require("./module/timespeaker/TimeSpeakerModule");
 
 var Slack = require('slack-node');
+var SlackClient = require('node-slackbot');
 
 
 
 class SlackBot {
   private _slackAPI:any;
+  private _slackClient:any;
   private _id:string;
   private _name:string;
+  private _homeChannelId:string;
 
   private _modules:IModule[];
   private _commands:{[key:string]: Function};
 
   constructor(private _config:IConfig) {
     this._slackAPI = new Slack(this._config.apiToken);
+
+    //TODO:機能足りなくなったらコイツforkする
+    this._slackClient = new SlackClient(this._config.apiToken);
+    this._slackClient.use((message:IRTMMessage, cb:Function) => {
+      this._messageHandler(message);
+      cb();
+    });
+    this._slackClient.connect();
 
     this._commands = {};
 
@@ -71,6 +84,68 @@ class SlackBot {
 
 
   }
+
+  private _messageHandler(message:IRTMMessage): void {
+    if (message.type !== "message") {
+      return;
+    }
+
+    // 自分自身の発言はスルーする
+    if (message.user === this._id) {
+      this._homeChannelId = message.channel;
+      return
+    }
+
+    var commandMessage = this._parseMessage(message);
+    if (!commandMessage) {
+      return;
+    }
+
+    console.log(commandMessage);
+    if (!this._commands[commandMessage.command]) {
+      this.say(commandMessage.command + " : Unknown Command.");
+    }
+  }
+
+  private _parseMessage(message:IRTMMessage): ICommandMessage {
+    var result:ICommandMessage = {
+      command:null,
+      options:null,
+      message:null,
+      user:null
+    }
+    var text = message.text;
+    // textが無ければスルー
+    if (!text) {
+      return;
+    }
+
+    var splitted = text.split(' ');
+
+    // 書式がコマンドではない
+    if (splitted.length < 2) {
+      return;
+    }
+
+    // 自分宛のメンションでなければスルー
+    if (splitted[0].indexOf("@" + this._id) < 0) {
+      return;
+    }
+
+    //.で繋げられた文字列の先頭をコマンド、残りをオプションと見なす
+    var commands = splitted[1].split(".");
+
+    result.command = commands[0];
+    result.options = commands.slice(1);
+
+    //残りの文字列はメッセージと見なし、全て連結して入れる
+    var messages = splitted.slice(2);
+    result.message = messages.join(" ");
+
+    result.user = message.user;
+    return result;
+  }
+
 }
 
 export=SlackBot;
