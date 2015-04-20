@@ -11,7 +11,6 @@ class Bot {
   }
 }
 
-
 //export=Bot;
 
 new Bot();
