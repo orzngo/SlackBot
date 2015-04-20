@@ -13,6 +13,9 @@
     },
     "gulp-typescript/gulp-typescript.d.ts": {
       "ref": "609c6a7a11a79e0e831a301f1def7b581853216f"
+    },
+    "gulp/gulp.d.ts": {
+      "ref": "1957eb54fbb7ef0d0397c2c78a5b5e638e813ec8"
     }
   }
 }
