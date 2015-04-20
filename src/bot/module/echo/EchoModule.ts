@@ -1,4 +1,5 @@
 import IModule = require("../IModule");
+import ICommandMessage = require("../../message/ICommandMessage");
 import SlackBot = require("../../SlackBot");
 
 class EchoModule implements IModule {
@@ -6,8 +7,9 @@ class EchoModule implements IModule {
   }
 
 
-  public exec(message:string):void {
-    this._bot.say(message);
+  public exec(message:ICommandMessage):void {
+    var option:string = message.options.join(".");
+    this._bot.say(message.message + "with option:" + option);
   }
 
   get name():string {

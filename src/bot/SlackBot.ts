@@ -21,7 +21,7 @@ class SlackBot {
   private _homeChannelId:string;
 
   private _modules:IModule[];
-  private _commands:{[key:string]: Function};
+  private _commands:{[key:string]: IModule};
 
   constructor(private _config:IConfig) {
     this._slackAPI = new Slack(this._config.apiToken);
@@ -36,9 +36,11 @@ class SlackBot {
 
     this._commands = {};
 
+    /*
     this._commands["commands"] =  (message:string) => {
       this.say(this.commands.toString());
     };
+    */
     this._slackAPI.api('auth.test',{}, (error:any, resp:any) => {
       if (error) {
         console.log("Auth.test error!!");
@@ -60,7 +62,7 @@ class SlackBot {
     for (var key in this._modules) {
       var mod = this._modules[key];
       var command = mod.name;
-      this._commands[command] = mod.exec;
+      this._commands[command] = mod;
     }
   }
 
@@ -104,7 +106,10 @@ class SlackBot {
     console.log(commandMessage);
     if (!this._commands[commandMessage.command]) {
       this.say(commandMessage.command + " : Unknown Command.");
+      return;
     }
+
+    this._commands[commandMessage.command].exec(commandMessage);
   }
 
   private _parseMessage(message:IRTMMessage): ICommandMessage {
@@ -144,6 +149,24 @@ class SlackBot {
 
     result.user = message.user;
     return result;
+  }
+
+  private _helpModule():IModule {
+    return {
+      name: "commands",
+      description: "登録済みのコマンド一覧を表示します",
+      usage: "@botname commands",
+      exec: (ICommandMessage) => {
+        var result:string[] = [];
+
+        for (var key in this._commands) {
+          result.push(key);
+        }
+
+        this.say(result.join(","));
+
+      } 
+    }
   }
 
 }

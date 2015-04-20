@@ -1,13 +1,13 @@
 import IModule = require("../IModule");
 import SlackBot = require("../../SlackBot");
+import ICommandMessage = require("../../message/ICommandMessage");
 
 class TimeSpeakerModule implements IModule {
   constructor(private _bot:SlackBot){
   }
 
 
-  public exec(message:string):void {
-    this._bot.say(message);
+  public exec(message:ICommandMessage):void {
   }
 
   get name():string {
