@@ -4,6 +4,7 @@ import IConfig = require('../config/IConfig');
 import IModule = require("./module/IModule");
 
 import EchoModule = require("./module/echo/EchoModule");
+import TimeSpeakerModule = require("./module/timespeaker/TimeSpeakerModule");
 
 var Slack = require('slack-node');
 
@@ -41,6 +42,7 @@ class SlackBot {
   private _loadModule(): void {
     this._modules = [];
     this._modules.push(new EchoModule(this));
+    this._modules.push(new TimeSpeakerModule(this));
 
     for (var key in this._modules) {
       var mod = this._modules[key];
@@ -53,8 +55,6 @@ class SlackBot {
   // 初期化された事を伝える
   private _initializedMessage():void {
     this.say("I am " + this._name + ":" + this._id + ". I'm ready.");
-    console.log(this.commands);
-
   }
 
   public say(message:string, channel:string = this._config.home): void {
