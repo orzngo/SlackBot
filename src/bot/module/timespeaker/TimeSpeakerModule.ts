@@ -3,12 +3,13 @@
 import IModule = require("../IModule");
 import SlackBot = require("../../SlackBot");
 import ICommandMessage = require("../../message/ICommandMessage");
+import Job = require("./Job");
+
 import fs = require("fs");
 
-var Cron = require("cron");
 
 class TimeSpeakerModule implements IModule {
-  private _jobList:Array<any> = [];
+  private _jobList:Array<Job> = [];
   private _path:string;
 
   private _running:Boolean = true;
@@ -20,6 +21,16 @@ class TimeSpeakerModule implements IModule {
     if (!fs.existsSync(this._path)) {
       fs.mkdirSync(this._path);
     }
+
+
+    //test
+    this._jobList.push(new Job(this._bot, "* * * * *", "hogehoge"));
+    this._jobList.push(new Job(this._bot, "*/1 * * * *", "hogepiyo"));
+    var job = new Job(this._bot, "* * 2 * *", "hogeearaefas");
+    job.start();
+    this._jobList.push(job);
+    this._jobList.push(new Job(this._bot, "* * * * *", "あはん"));
+
   }
 
 
@@ -35,8 +46,10 @@ class TimeSpeakerModule implements IModule {
         this._status(message);
         break;
       case "set":
+        this._set(message);
         break;
       case "list":
+        this._list(message);
         break;
       case "unset":
         break;
@@ -68,7 +81,24 @@ class TimeSpeakerModule implements IModule {
     this._bot.say("running = " + String(this._running));
   }
 
+  private _list(message:ICommandMessage): void {
+    var result = "";
+    for (var key in this._jobList) {
+      var job = this._jobList[key];
+      if (job.running) {
+        result += "o ";
+      } else {
+        result += "x ";
+      }
+      result += key + " : " + this._jobList[key].time + " : " + this._jobList[key].text + "\n";
+    }
+    this._bot.say(result);
 
+  }
+
+
+  private _set(message:ICommandMessage): void {
+  }
 
   get name():string {
     return "timespeaker";
