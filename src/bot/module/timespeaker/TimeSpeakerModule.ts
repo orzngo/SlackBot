@@ -7,6 +7,11 @@ import Job = require("./Job");
 
 import fs = require("fs");
 
+interface ICronMessage {
+  time:string;
+  message:string;
+}
+
 
 class TimeSpeakerModule implements IModule {
   private _jobList:Array<Job> = [];
@@ -21,18 +26,7 @@ class TimeSpeakerModule implements IModule {
     if (!fs.existsSync(this._path)) {
       fs.mkdirSync(this._path);
     }
-
-
-    //test
-    this._jobList.push(new Job(this._bot, "* * * * *", "hogehoge"));
-    this._jobList.push(new Job(this._bot, "*/1 * * * *", "hogepiyo"));
-    var job = new Job(this._bot, "* * 2 * *", "hogeearaefas");
-    job.start();
-    this._jobList.push(job);
-    this._jobList.push(new Job(this._bot, "* * * * *", "あはん"));
-
   }
-
 
   public exec(message:ICommandMessage):void {
     switch (message.options[0]) {
@@ -52,6 +46,7 @@ class TimeSpeakerModule implements IModule {
         this._list(message);
         break;
       case "unset":
+        this._unset(message);
         break;
       default:
         this._bot.say("Unknown Option :" + message.options[0]);
@@ -60,6 +55,28 @@ class TimeSpeakerModule implements IModule {
 
 
   private _start(message:ICommandMessage): void {
+    var targetId:number = Number(message.options[1]);
+
+    // 本体のステータス変更
+    if (isNaN(targetId)) {
+      this._startSelf();
+      return;
+    }
+
+    this._startJob(targetId);
+
+  }
+
+  private _startJob(id:number): void {
+    if (!this._jobList[id]) {
+      this._bot.say("Unknown job id : " + id);
+      return;
+    }
+    this._jobList[id].start();
+    this._bot.say("job id : " + id + " started.");
+  }
+
+  private _startSelf(): void {
     if (!this._running) {
       this._running = true;
       this._bot.say("Started.");
@@ -68,7 +85,31 @@ class TimeSpeakerModule implements IModule {
     this._bot.say("Already started.");
   }
 
+
+
   private _stop(message:ICommandMessage): void {
+    var targetId:number = Number(message.options[1]);
+
+    // 本体のステータス変更
+    if (isNaN(targetId)) {
+      this._stopSelf();
+      return;
+    }
+
+    this._stopJob(targetId);
+  }
+
+  private _stopJob(id:number): void {
+    if (!this._jobList[id]) {
+      this._bot.say("Unknown job id : " + id);
+      return;
+    }
+    this._jobList[id].stop();
+    this._bot.say("job id : " + id + " stopped.");
+  }
+
+
+  private _stopSelf(): void {
     if (this._running) {
       this._running = false;
       this._bot.say("Stopped.");
@@ -93,11 +134,63 @@ class TimeSpeakerModule implements IModule {
       result += key + " : " + this._jobList[key].time + " : " + this._jobList[key].text + "\n";
     }
     this._bot.say(result);
-
   }
 
 
   private _set(message:ICommandMessage): void {
+    var id = Number(message.options[1]);
+
+    var cronMessage = this._parseMessage(message.message);
+
+    if (!cronMessage) {
+      this._bot.say("parse failed. : " + message.message);
+    }
+
+    var job = new Job(this._bot, cronMessage.time, cronMessage.message);
+
+    if (isNaN(id) || !this._jobList[id]) {
+      // 新規ジョブ作成
+      this._jobList.push(job);
+      this._bot.say("Job created!");
+    }else {
+      // 既存ジョブの設定変更
+      this._jobList[id].set(cronMessage.time, cronMessage.message);
+      this._bot.say("Job updated!");
+    }
+  }
+
+
+  private _parseMessage(message:string): ICronMessage {
+    var messages = message.split(" ");
+
+    if (messages.length < 6) {
+      return null;
+    }
+
+    var crontime = messages.slice(0,5).join(" ");
+    var text = messages.slice(5).join(" ");
+
+    var result:ICronMessage = {
+      time: crontime,
+      message: text
+    }
+    return result;
+
+
+  }
+
+  private _unset(message:ICommandMessage): void {
+    var id = Number(message.options[1]);
+
+    if (isNaN(id) || !this._jobList[id]) {
+      this._bot.say("Unknown job id : " + id);
+      return;
+    }
+
+    this._jobList[id].stop();
+    delete this._jobList[id];
+
+    this._bot.say("job id : " + id + " deleted.");
   }
 
   get name():string {
@@ -116,7 +209,7 @@ class TimeSpeakerModule implements IModule {
     mes += 'timespeaker.list\n';
     mes += 'timespeaker.unset.id\n';
 
-    return mes
+    return mes;
   }
 }
 
