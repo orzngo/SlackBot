@@ -72,6 +72,10 @@ class SlackBot {
     this._slackAPI.api('chat.postMessage', {text:message, channel:channel, as_user:true});
   }
 
+  public debug(message:string): void {
+    this.say(message, this._config.debug);
+  }
+
   get commands():string[] {
     var result:string[] = [];
     for (var key in this._commands) {
