@@ -29,7 +29,7 @@ class EchoModule implements IModule {
     return "言われた事をそのまま発言する";
   }
   get usage():string {
-    return "echo message";
+    return "@botname echo message";
   }
 }
 

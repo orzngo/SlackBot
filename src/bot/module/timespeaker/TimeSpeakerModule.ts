@@ -17,7 +17,16 @@ class TimeSpeakerModule implements IModule {
     return "cron的に発言する";
   }
   get usage():string {
-    return "echo message";
+    var mes ="";
+    mes += 'timespeaker.start\n';
+    mes += 'timespeaker.stop\n';
+    mes += 'timespeaker.status\n';
+    mes += 'timespeaker.set * * * * * * message\n';
+    mes += 'timespeaker.set.id * * * * * * message\n';
+    mes += 'timespeaker.list\n';
+    mes += 'timespeaker.unset.id\n';
+
+    return mes
   }
 }
 

@@ -36,11 +36,7 @@ class SlackBot {
 
     this._commands = {};
 
-    /*
-    this._commands["commands"] =  (message:string) => {
-      this.say(this.commands.toString());
-    };
-    */
+    this._commands["commands"] = this._helpModule();
     this._slackAPI.api('auth.test',{}, (error:any, resp:any) => {
       if (error) {
         console.log("Auth.test error!!");
@@ -109,7 +105,11 @@ class SlackBot {
       return;
     }
 
-    this._commands[commandMessage.command].exec(commandMessage);
+    if (commandMessage.options[0] === "?") {
+      this.say(this._commands[commandMessage.command].usage);
+    } else {
+      this._commands[commandMessage.command].exec(commandMessage);
+    }
   }
 
   private _parseMessage(message:IRTMMessage): ICommandMessage {
@@ -160,10 +160,10 @@ class SlackBot {
         var result:string[] = [];
 
         for (var key in this._commands) {
-          result.push(key);
+          result.push(key + " : " + this._commands[key].description);
         }
 
-        this.say(result.join(","));
+        this.say(result.join("\n"));
 
       } 
     }
