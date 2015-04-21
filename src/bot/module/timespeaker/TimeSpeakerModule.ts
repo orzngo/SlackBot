@@ -265,11 +265,10 @@ class TimeSpeakerModule implements IModule {
   }
   get usage():string {
     var mes ="";
-    mes += 'timespeaker.start\n';
-    mes += 'timespeaker.stop\n';
+    mes += 'timespeaker.start[.id]\n';
+    mes += 'timespeaker.stop[.id]\n';
     mes += 'timespeaker.status\n';
-    mes += 'timespeaker.set * * * * * * message\n';
-    mes += 'timespeaker.set.id * * * * * * message\n';
+    mes += 'timespeaker.set[.id] * * * * * * message\n';
     mes += 'timespeaker.list\n';
     mes += 'timespeaker.unset.id\n';
 
