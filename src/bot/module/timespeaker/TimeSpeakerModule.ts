@@ -211,6 +211,7 @@ class TimeSpeakerModule implements IModule {
     this._jobList[id].stop();
     delete this._jobList[id];
 
+    this._save();
     this._bot.say("job id : " + id + " deleted.");
   }
 
