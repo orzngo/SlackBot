@@ -8,8 +8,18 @@ class EchoModule implements IModule {
 
 
   public exec(message:ICommandMessage):void {
+    if (!message.message || message.message.length === 0) {
+      return;
+    }
+
+    var text = message.message;
+
     var option:string = message.options.join(".");
-    this._bot.say(message.message + "with option:" + option);
+    if (option.length > 0) {
+      text += "  option: " + option;
+    }
+
+    this._bot.say(text);
   }
 
   get name():string {
