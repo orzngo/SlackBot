@@ -8,6 +8,8 @@ import Job = require("./Job");
 import fs = require("fs");
 
 interface ICronMessage {
+  id:number;
+  running:boolean;
   time:string;
   message:string;
 }
@@ -26,6 +28,7 @@ class TimeSpeakerModule implements IModule {
     if (!fs.existsSync(this._path)) {
       fs.mkdirSync(this._path);
     }
+    this._load();
   }
 
   public exec(message:ICommandMessage):void {
@@ -43,7 +46,7 @@ class TimeSpeakerModule implements IModule {
         this._set(message);
         break;
       case "list":
-        this._list(message);
+        this._bot.say(this._list());
         break;
       case "unset":
         this._unset(message);
@@ -74,6 +77,7 @@ class TimeSpeakerModule implements IModule {
     }
     this._jobList[id].start();
     this._bot.say("job id : " + id + " started.");
+    this._save();
   }
 
   private _startSelf(): void {
@@ -86,6 +90,14 @@ class TimeSpeakerModule implements IModule {
   }
 
 
+  private _set(message:ICommandMessage) {
+    var res = this._create(this._parseCommandMessage(message.message));
+    if (!res) {
+      this._bot.say("command set failed.");
+    } else {
+      this._bot.say("I will say " + res.message);
+    }
+  }
 
   private _stop(message:ICommandMessage): void {
     var targetId:number = Number(message.options[1]);
@@ -106,6 +118,7 @@ class TimeSpeakerModule implements IModule {
     }
     this._jobList[id].stop();
     this._bot.say("job id : " + id + " stopped.");
+    this._save();
   }
 
 
@@ -122,7 +135,7 @@ class TimeSpeakerModule implements IModule {
     this._bot.say("running = " + String(this._running));
   }
 
-  private _list(message:ICommandMessage): void {
+  private _list():string {
     var result = "";
     for (var key in this._jobList) {
       var job = this._jobList[key];
@@ -131,46 +144,54 @@ class TimeSpeakerModule implements IModule {
       } else {
         result += "x ";
       }
-      result += key + " : " + this._jobList[key].time + " : " + this._jobList[key].text + "\n";
+      result += key + " : " + this._jobList[key].time + " " + this._jobList[key].text + "\n";
     }
-    this._bot.say(result);
+
+    return result;
   }
 
 
-  private _set(message:ICommandMessage): void {
-    var id = Number(message.options[1]);
-
-    var cronMessage = this._parseMessage(message.message);
-
+  private _create(cronMessage:ICronMessage): ICronMessage {
     if (!cronMessage) {
-      this._bot.say("parse failed. : " + message.message);
+      return;
     }
+    var job:Job;
 
-    var job = new Job(this._bot, cronMessage.time, cronMessage.message);
-
-    if (isNaN(id) || !this._jobList[id]) {
+    if (isNaN(cronMessage.id) || !this._jobList[cronMessage.id]) {
       // 新規ジョブ作成
+      job = new Job(this._bot, cronMessage.time, cronMessage.message);
       this._jobList.push(job);
-      this._bot.say("Job created!");
     }else {
       // 既存ジョブの設定変更
-      this._jobList[id].set(cronMessage.time, cronMessage.message);
-      this._bot.say("Job updated!");
+      job=this._jobList[cronMessage.id];
+      job.set(cronMessage.time, cronMessage.message);
     }
+
+    if (cronMessage.running) {
+      job.start();
+    } else {
+      job.stop();
+    }
+    this._save();
+
+    return cronMessage;
   }
 
 
-  private _parseMessage(message:string): ICronMessage {
+  private _parseCommandMessage(message:string): ICronMessage {
     var messages = message.split(" ");
 
     if (messages.length < 6) {
       return null;
     }
+    var id = Number(messages[1]);
 
     var crontime = messages.slice(0,5).join(" ");
     var text = messages.slice(5).join(" ");
 
     var result:ICronMessage = {
+      id: id,
+      running: false,
       time: crontime,
       message: text
     }
@@ -192,6 +213,48 @@ class TimeSpeakerModule implements IModule {
 
     this._bot.say("job id : " + id + " deleted.");
   }
+
+  private _save(): void {
+    console.log("save");
+    fs.writeFileSync(this._path + "/job", this._list());
+  }
+
+  private _load(): void {
+    try{
+      var file = String(fs.readFileSync(this._path + "/job")).split("\n");
+      for (var key in file) {
+        this._create(this._parseSaveMessage(file[key]));
+      }
+    }catch(e) {
+      return;
+    }
+  }
+
+  private _parseSaveMessage(message:string):ICronMessage {
+    var messages = message.split(" ");
+    var cronMessage:ICronMessage = {
+      id: null,
+      running: false,
+      time: "",
+      message: ""
+    }
+
+    if (messages.length < 10) {
+      return null;
+    }
+
+    if (messages[0] === "o") {
+      cronMessage.running = true;
+    }
+
+    cronMessage.id = Number(message[1]);
+    cronMessage.time = messages.splice(3,5).join(" ");
+    cronMessage.message = messages.splice(3).join(" ");
+    return cronMessage;
+
+  }
+
+
 
   get name():string {
     return "timespeaker";
