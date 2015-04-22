@@ -46,7 +46,8 @@ class TimeSpeakerModule implements IModule {
         this._set(message);
         break;
       case "list":
-        this._bot.say(this._list());
+          var list = this._list()
+          this._bot.say((list.length > 0) ? list : "empty");
         break;
       case "unset":
         this._unset(message);
@@ -157,6 +158,7 @@ class TimeSpeakerModule implements IModule {
     }
     var job:Job;
 
+
     if (isNaN(cronMessage.id) || !this._jobList[cronMessage.id]) {
       // 新規ジョブ作成
       job = new Job(this._bot, cronMessage.time, cronMessage.message);
@@ -216,7 +218,6 @@ class TimeSpeakerModule implements IModule {
   }
 
   private _save(): void {
-    console.log("save");
     fs.writeFileSync(this._path + "/job", this._list());
   }
 
@@ -227,6 +228,7 @@ class TimeSpeakerModule implements IModule {
         this._create(this._parseSaveMessage(file[key]));
       }
     }catch(e) {
+      console.log(e);
       return;
     }
   }
@@ -240,7 +242,7 @@ class TimeSpeakerModule implements IModule {
       message: ""
     }
 
-    if (messages.length < 10) {
+    if (messages.length < 9) {
       return null;
     }
 

@@ -37,6 +37,7 @@ class SlackBot {
     this._commands = {};
 
     this._commands["commands"] = this._helpModule();
+    this._commands["die"] = this._dieModule();
     this._slackAPI.api('auth.test',{}, (error:any, resp:any) => {
       if (error) {
         console.log("Auth.test error!!");
@@ -169,6 +170,23 @@ class SlackBot {
 
         this.say(result.join("\n"));
 
+      } 
+    }
+  }
+
+  private _dieModule():IModule {
+    return {
+      name: "die",
+      description: "死にます。",
+      usage: "@botname die[.hard]",
+      exec: (ICommandMessage) => {
+        if (ICommandMessage.options[0] === "hard"){
+          this.say("ホォォリィィィィィィィィ！！！");
+        } else {
+          this.say("I'll be back.");
+        }
+
+        process.exit(0);
       } 
     }
   }
