@@ -66,7 +66,7 @@ class SlackBot {
 
   // 初期化された事を伝える
   private _initializedMessage():void {
-    this.say("I am " + this._name + ":" + this._id + ". I'm ready.");
+    //this.say("I am " + this._name + ":" + this._id + ". I'm ready.");
   }
 
   public say(message:string, channel:string = this._config.home): void {
