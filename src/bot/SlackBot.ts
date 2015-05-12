@@ -23,6 +23,9 @@ class SlackBot {
   private _modules:IModule[];
   private _commands:{[key:string]: IModule};
 
+  // このフラグがfalseのときは、何も喋らなくなります。
+  private _active:boolean = true;
+
   constructor(private _config:IConfig) {
     this._slackAPI = new Slack(this._config.apiToken);
 
@@ -38,6 +41,7 @@ class SlackBot {
 
     this._commands["commands"] = this._helpModule();
     this._commands["die"] = this._dieModule();
+    this._commands["resurrect"] = this._resurrectModule();
     this._slackAPI.api('auth.test',{}, (error:any, resp:any) => {
       if (error) {
         console.log("Auth.test error!!");
@@ -69,12 +73,15 @@ class SlackBot {
     //this.say("I am " + this._name + ":" + this._id + ". I'm ready.");
   }
 
+
   public say(message:string, channel:string = this._config.home): void {
+    if (!this._active)
+      return;
     this._slackAPI.api('chat.postMessage', {text:message, channel:channel, as_user:true});
   }
 
-  public debug(message:string): void {
-    this.say(message, this._config.debug);
+  public debug(message:string, channel:string = this._config.debug): void {
+    this._slackAPI.api('chat.postMessage', {text:message, channel:channel, as_user:true});
   }
 
   get commands():string[] {
@@ -99,8 +106,14 @@ class SlackBot {
       return
     }
 
+
     var commandMessage = this._parseMessage(message);
     if (!commandMessage) {
+      return;
+    }
+
+    if (!this._active && commandMessage.command !== "resurrect") {
+      this.debug("Doverbotは無効状態です。復活させるにはresurrect", commandMessage.channel);
       return;
     }
 
@@ -122,13 +135,16 @@ class SlackBot {
       command:null,
       options:null,
       message:null,
-      user:null
+      user:null,
+      channel:null
     }
     var text = message.text;
     // textが無ければスルー
     if (!text) {
       return;
     }
+
+    result.channel = message.channel;
 
     var splitted = text.split(' ');
 
@@ -161,14 +177,14 @@ class SlackBot {
       name: "commands",
       description: "登録済みのコマンド一覧を表示します",
       usage: "@botname commands",
-      exec: (ICommandMessage) => {
+      exec: (message:ICommandMessage) => {
         var result:string[] = [];
 
         for (var key in this._commands) {
           result.push(key + " : " + this._commands[key].description);
         }
 
-        this.say(result.join("\n"));
+        this.say(result.join("\n"), message.channel);
 
       } 
     }
@@ -177,7 +193,7 @@ class SlackBot {
   private _dieModule():IModule {
     return {
       name: "die",
-      description: "死にます。",
+      description: "死んで何も喋らなくなります。起こすときはresurrect",
       usage: "@botname die[.hard]",
       exec: (ICommandMessage) => {
         if (ICommandMessage.options[0] === "hard"){
@@ -186,7 +202,19 @@ class SlackBot {
           this.say("I'll be back.");
         }
 
-        process.exit(0);
+        this._active = false;
+      } 
+    }
+  }
+
+  private _resurrectModule():IModule {
+    return {
+      name: "resurrect",
+      description: "喋らなくなったBotを元通りにします。",
+      usage: "@botname ressurect",
+      exec: (ICommandMessage) => {
+        this._active = true;
+        this.say("復活!!");
       } 
     }
   }

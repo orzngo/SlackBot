@@ -18,6 +18,7 @@ interface ICronMessage {
 class TimeSpeakerModule implements IModule {
   private _jobList:Array<Job> = [];
   private _path:string;
+  private _channel:string;
 
   private _running:Boolean = true;
 
@@ -32,6 +33,7 @@ class TimeSpeakerModule implements IModule {
   }
 
   public exec(message:ICommandMessage):void {
+    this._channel = message.channel;
     switch (message.options[0]) {
       case "start":
         this._start(message);
@@ -47,13 +49,13 @@ class TimeSpeakerModule implements IModule {
         break;
       case "list":
           var list = this._list()
-          this._bot.say((list.length > 0) ? list : "empty");
+          this._bot.say((list.length > 0) ? list : "empty", this._channel);
         break;
       case "unset":
         this._unset(message);
         break;
       default:
-        this._bot.say("Unknown Option :" + message.options[0]);
+        this._bot.say("Unknown Option :" + message.options[0], this._channel);
     }
   }
 
@@ -73,30 +75,30 @@ class TimeSpeakerModule implements IModule {
 
   private _startJob(id:number): void {
     if (!this._jobList[id]) {
-      this._bot.say("Unknown job id : " + id);
+      this._bot.say("Unknown job id : " + id, this._channel);
       return;
     }
     this._jobList[id].start();
-    this._bot.say("job id : " + id + " started.");
+    this._bot.say("job id : " + id + " started.", this._channel);
     this._save();
   }
 
   private _startSelf(): void {
     if (!this._running) {
       this._running = true;
-      this._bot.say("Started.");
+      this._bot.say("Started.", this._channel);
       return;
     }
-    this._bot.say("Already started.");
+    this._bot.say("Already started.", this._channel);
   }
 
 
   private _set(message:ICommandMessage) {
     var res = this._create(this._parseCommandMessage(message.message));
     if (!res) {
-      this._bot.say("command set failed.");
+      this._bot.say("command set failed.", this._channel);
     } else {
-      this._bot.say("I will say " + res.message);
+      this._bot.say("I will say " + res.message, this._channel);
     }
   }
 
@@ -114,11 +116,11 @@ class TimeSpeakerModule implements IModule {
 
   private _stopJob(id:number): void {
     if (!this._jobList[id]) {
-      this._bot.say("Unknown job id : " + id);
+      this._bot.say("Unknown job id : " + id, this._channel);
       return;
     }
     this._jobList[id].stop();
-    this._bot.say("job id : " + id + " stopped.");
+    this._bot.say("job id : " + id + " stopped.", this._channel);
     this._save();
   }
 
@@ -126,14 +128,14 @@ class TimeSpeakerModule implements IModule {
   private _stopSelf(): void {
     if (this._running) {
       this._running = false;
-      this._bot.say("Stopped.");
+      this._bot.say("Stopped.", this._channel);
       return;
     }
-    this._bot.say("Already stopped.");
+    this._bot.say("Already stopped.", this._channel);
   }
 
   private _status(message:ICommandMessage): void {
-    this._bot.say("running = " + String(this._running));
+    this._bot.say("running = " + String(this._running), this._channel);
   }
 
   private _list():string {
@@ -208,7 +210,7 @@ class TimeSpeakerModule implements IModule {
     var id = Number(message.options[1]);
 
     if (isNaN(id) || !this._jobList[id]) {
-      this._bot.say("Unknown job id : " + id);
+      this._bot.say("Unknown job id : " + id, this._channel);
       return;
     }
 
@@ -216,7 +218,7 @@ class TimeSpeakerModule implements IModule {
     delete this._jobList[id];
 
     this._save();
-    this._bot.say("job id : " + id + " deleted.");
+    this._bot.say("job id : " + id + " deleted.", this._channel);
   }
 
   private _save(): void {

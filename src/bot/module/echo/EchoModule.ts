@@ -19,7 +19,7 @@ class EchoModule implements IModule {
       text += "  option: " + option;
     }
 
-    this._bot.say(text);
+    this._bot.say(text, message.channel);
   }
 
   get name():string {

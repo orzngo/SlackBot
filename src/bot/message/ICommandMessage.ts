@@ -3,6 +3,7 @@ interface ICommandMessage {
   options:string[];
   message:string;
   user:string;
+  channel:string;
 }
 
 export=ICommandMessage;
