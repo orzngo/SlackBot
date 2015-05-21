@@ -7,6 +7,7 @@ import ICommandMessage = require("./message/ICommandMessage");
 
 import EchoModule = require("./module/echo/EchoModule");
 import TimeSpeakerModule = require("./module/timespeaker/TimeSpeakerModule");
+import fs = require("fs");
 
 var Slack = require('slack-node');
 var SlackClient = require('node-slackbot');
@@ -217,6 +218,54 @@ class SlackBot {
         this.say("復活!!");
       } 
     }
+  }
+
+  /**
+   * 簡単なテキストデータの書き込み機能
+   * 各モジュール毎にディレクトリが切られる
+   *
+   * @param data {string} 書き込みたいデータ
+   * @param dirname {string} 保存したいディレクトリ
+   * @param filename {string} 保存したいファイル名
+   *
+   * @return {boolean} 書き込みに成功したかどうか
+   */
+  public save(data:string, dirname:string, filename:string = "save.txt"): boolean {
+    if (!dirname) {
+      dirname = "global";
+    }
+    try {
+      if (!fs.existsSync("./etc/" + dirname)) {
+        fs.mkdirSync("./etc/" + dirname);
+      }
+      fs.writeFileSync("./etc/" + dirname + "/" + filename, data);
+    } catch (e) {
+      return false;
+    }
+
+    return true;
+
+  }
+    
+  /**
+   * 簡単なテキストデータの読み込み機能
+   *
+   * @param dirname {string} 読み込むディレクトリ
+   * @param filename {string} 読み込むファイル名
+   *
+   * @return {string} 読み込んだ文字列 
+   */
+  public load(dirname:string, filename:string = "save.txt"): string {
+    if (!dirname) {
+      dirname = "global";
+    }
+    try{
+      var file = String(fs.readFileSync("./etc/" + dirname + "/" + filename));
+    }catch(e) {
+      return null;
+    }
+
+    return file;
   }
 
 }

@@ -222,12 +222,12 @@ class TimeSpeakerModule implements IModule {
   }
 
   private _save(): void {
-    fs.writeFileSync(this._path + "/job", this._list());
+    this._bot.save(this._list(), this.name, "job");
   }
 
   private _load(): void {
     try{
-      var file = String(fs.readFileSync(this._path + "/job")).split("\n");
+      var file = this._bot.load(this.name, "job").split("\n");
       for (var key in file) {
         this._create(this._parseSaveMessage(file[key]));
       }
