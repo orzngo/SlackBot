@@ -7,6 +7,7 @@ import ICommandMessage = require("./message/ICommandMessage");
 
 import EchoModule = require("./module/echo/EchoModule");
 import TimeSpeakerModule = require("./module/timespeaker/TimeSpeakerModule");
+import OmikujiModule = require("./module/omikuji/OmikujiModule");
 import fs = require("fs");
 
 var Slack = require('slack-node');
@@ -60,6 +61,7 @@ class SlackBot {
     this._modules = [];
     this._modules.push(new EchoModule(this));
     this._modules.push(new TimeSpeakerModule(this));
+    this._modules.push(new OmikujiModule(this));
 
     for (var key in this._modules) {
       var mod = this._modules[key];
@@ -120,12 +122,12 @@ class SlackBot {
 
     console.log(commandMessage);
     if (!this._commands[commandMessage.command]) {
-      this.say(commandMessage.command + " : Unknown Command.");
+      this.say(commandMessage.command + " : Unknown Command.", commandMessage.channel);
       return;
     }
 
     if (commandMessage.options[0] === "?") {
-      this.say(this._commands[commandMessage.command].usage);
+      this.say(this._commands[commandMessage.command].usage, commandMessage.channel);
     } else {
       this._commands[commandMessage.command].exec(commandMessage);
     }
@@ -196,11 +198,11 @@ class SlackBot {
       name: "die",
       description: "死んで何も喋らなくなります。起こすときはresurrect",
       usage: "@botname die[.hard]",
-      exec: (ICommandMessage) => {
-        if (ICommandMessage.options[0] === "hard"){
-          this.say("ホォォリィィィィィィィィ！！！");
+      exec: (commandMessage: ICommandMessage) => {
+        if (commandMessage.options[0] === "hard"){
+          this.say("ホォォリィィィィィィィィ！！！", commandMessage.channel);
         } else {
-          this.say("I'll be back.");
+          this.say("I'll be back.", commandMessage.channel);
         }
 
         this._active = false;
@@ -213,7 +215,7 @@ class SlackBot {
       name: "resurrect",
       description: "喋らなくなったBotを元通りにします。",
       usage: "@botname ressurect",
-      exec: (ICommandMessage) => {
+      exec: (commandMessage: ICommandMessage) => {
         this._active = true;
         this.say("復活!!");
       } 
