@@ -64,7 +64,7 @@ class OmikujiModule implements IModule {
   }
   get usage():string {
     return  "omikuji hoge,hoo,bar   -> hoge,hoo,barのうち１つをランダムに出力\n"
-          + "omikuji.2 hoge,hoo,bar -> hoge,hoo,barのうち２つをランダムに出力";
+          + "omikuji.n hoge,hoo,bar -> hoge,hoo,barのうちn個をランダムに出力";
   }
 }
 
