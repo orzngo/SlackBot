@@ -13,8 +13,6 @@ import fs = require("fs");
 var Slack = require('slack-node');
 var SlackClient = require('node-slackbot');
 
-
-
 class SlackBot {
   private _slackAPI:any;
   private _slackClient:any;
@@ -94,8 +92,6 @@ class SlackBot {
     }
 
     return result;
-
-
   }
 
   private _messageHandler(message:IRTMMessage): void {
