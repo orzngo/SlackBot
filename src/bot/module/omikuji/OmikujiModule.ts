@@ -23,8 +23,10 @@ class OmikujiModule implements IModule {
     var words = this._shuffle(words);
 
     var num = 1;
-    console
-    if (Number(message.options[0]) > 0) {
+
+    if (message.options[0] === "a") {
+      num = words.length;
+    } else if (Number(message.options[0]) > 0) {
       num = Number(message.options[0]);
     }
 
@@ -64,7 +66,8 @@ class OmikujiModule implements IModule {
   }
   get usage():string {
     return  "omikuji hoge,hoo,bar   -> hoge,hoo,barのうち１つをランダムに出力\n"
-          + "omikuji.n hoge,hoo,bar -> hoge,hoo,barのうちn個をランダムに出力";
+          + "omikuji.n hoge,hoo,bar -> hoge,hoo,barのうちn個をランダムに出力\n"
+          + "omikuji.a hoge,hoo,bar -> hoge,hoo,barの全てをランダムな順序で出力";
   }
 }
 
