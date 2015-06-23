@@ -8,10 +8,11 @@ import Job = require("./Job");
 import fs = require("fs");
 
 interface ICronMessage {
-  id:number;
-  running:boolean;
-  time:string;
-  message:string;
+  id: number;
+  running: boolean;
+  time: string;
+  message: string;
+  channel: string;
 }
 
 
@@ -94,11 +95,11 @@ class TimeSpeakerModule implements IModule {
 
 
   private _set(message:ICommandMessage) {
-    var res = this._create(this._parseCommandMessage(message.message));
+    var res = this._create(this._parseCommandMessage(message));
     if (!res) {
       this._bot.say("command set failed.", this._channel);
     } else {
-      this._bot.say("I will say " + res.message, this._channel);
+      this._bot.say("I will say " + res.message + " at here.", this._channel);
     }
   }
 
@@ -147,7 +148,7 @@ class TimeSpeakerModule implements IModule {
       } else {
         result += "x ";
       }
-      result += key + " : " + this._jobList[key].time + " " + this._jobList[key].text + "\n";
+      result += key + " : " + this._jobList[key].time + " " + this._jobList[key].channel + " " + this._jobList[key].text + "\n";
     }
 
     return result;
@@ -159,12 +160,10 @@ class TimeSpeakerModule implements IModule {
       return;
     }
     var job:Job;
-
-
-
     if (isNaN(cronMessage.id) || !this._jobList[cronMessage.id]) {
       // 新規ジョブ作成
-      job = new Job(this._bot, cronMessage.time, cronMessage.message);
+      job = new Job(this._bot, cronMessage.time, cronMessage.channel, cronMessage.message);
+      job.start();
       this._jobList.push(job);
     }else {
       // 既存ジョブの設定変更
@@ -177,15 +176,14 @@ class TimeSpeakerModule implements IModule {
     } else {
       job.stop();
     }
-
     this._save();
 
     return cronMessage;
   }
 
 
-  private _parseCommandMessage(message:string): ICronMessage {
-    var messages = message.split(" ");
+  private _parseCommandMessage(message:ICommandMessage): ICronMessage {
+    var messages = message.message.split(" ");
 
     if (messages.length < 6) {
       return null;
@@ -199,7 +197,8 @@ class TimeSpeakerModule implements IModule {
       id: id,
       running: false,
       time: crontime,
-      message: text
+      message: text,
+      channel: message.channel
     }
     return result;
 
@@ -243,7 +242,8 @@ class TimeSpeakerModule implements IModule {
       id: null,
       running: false,
       time: "",
-      message: ""
+      message: "",
+      channel: null,
     }
 
     if (messages.length < 9) {
@@ -255,8 +255,9 @@ class TimeSpeakerModule implements IModule {
     }
 
     cronMessage.id = Number(messages[1]);
-    cronMessage.time = messages.splice(3,5).join(" ");
-    cronMessage.message = messages.splice(3).join(" ");
+    cronMessage.time = messages.splice(3, 5).join(" ");
+    cronMessage.channel = messages[3];
+    cronMessage.message = messages.splice(4).join(" ");
     return cronMessage;
 
   }

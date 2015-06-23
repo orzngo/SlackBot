@@ -9,7 +9,7 @@ class Job {
   private _running:boolean = false;
   private _cronjob:any;
 
-  constructor(private _bot:SlackBot, private _crontime:string, private _message:string) {
+  constructor(private _bot:SlackBot, private _crontime:string, private _channel:string, private _message:string) {
     this.set(this._crontime, this._message);
   }
 
@@ -21,6 +21,10 @@ class Job {
     return this._message;
   }
 
+  get channel(): string {
+    return this._channel;
+  }
+
   public set(crontime:string, message:string) {
     if (this._cronjob) {
       this.stop();
@@ -30,7 +34,7 @@ class Job {
 
     this._cronjob = new Cron.CronJob(this.time, () => {
       if (this._running) {
-        this._bot.say(this.message);
+        this._bot.say(this.message, this.channel);
       }
     });
     if (this._running) {
