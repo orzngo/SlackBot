@@ -9,7 +9,7 @@ class OtenkiModule implements IModule {
 
   constructor(private _bot:SlackBot){
     var status:string = _bot.load(this.name, "status");
-    this._job = new BaseJob("*/15 * * * 1-5");
+    this._job = new BaseJob();
     if (status && status === "x") {
     } else {
     }

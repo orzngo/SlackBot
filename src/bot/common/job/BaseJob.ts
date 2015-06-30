@@ -8,19 +8,16 @@ var Cron = require("cron");
 class BaseJob {
   private _running:boolean = false;
   private _cronjob:any;
+  private _crontime:string;
 
-  constructor(private _crontime:string) {
-    this._set(this._crontime);
+  constructor() {
   }
 
   get time(): string {
     return this._crontime;
   }
 
-  public exec(): void {
-  }
-
-  protected _set(crontime:string): void {
+  public set(crontime:string, exec:Function = function(){}): void {
     if (this._cronjob) {
       this.stop();
     }
@@ -28,7 +25,7 @@ class BaseJob {
 
     this._cronjob = new Cron.CronJob(this.time, () => {
       if (this._running) {
-        this.exec();
+        exec();
       }
     });
     if (this._running) {
@@ -37,11 +34,19 @@ class BaseJob {
   }
 
   public start():void {
+    if (!this._cronjob) {
+      throw new Error("Job not initialized.");
+      return;
+    }
     this._running = true;
     this._cronjob.start();
   }
 
   public stop():void {
+    if (!this._cronjob) {
+      throw new Error("Job not initialized.");
+      return;
+    }
     this._running = false;
     this._cronjob.stop();
   }
