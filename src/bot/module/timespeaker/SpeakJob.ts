@@ -1,7 +1,7 @@
 ///<reference path="../../../../typings/node/node.d.ts" />
 
 import SlackBot = require("../../SlackBot");
-import BaseJob = require("./BaseJob");
+import BaseJob = require("../../common/job/BaseJob");
 
 class SpeakJob extends BaseJob {
 
