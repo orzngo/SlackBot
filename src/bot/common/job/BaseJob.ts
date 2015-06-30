@@ -5,36 +5,30 @@ import SlackBot = require("../../SlackBot");
 var Cron = require("cron");
 
 // node-cronのインスタンスのラッパ
-class Job {
+class BaseJob {
   private _running:boolean = false;
   private _cronjob:any;
 
-  constructor(private _bot:SlackBot, private _crontime:string, private _channel:string, private _message:string) {
-    this.set(this._crontime, this._message);
+  constructor(private _crontime:string) {
+    this._set(this._crontime);
   }
 
   get time(): string {
     return this._crontime;
   }
 
-  get message(): string {
-    return this._message;
+  public exec(): void {
   }
 
-  get channel(): string {
-    return this._channel;
-  }
-
-  public set(crontime:string, message:string) {
+  protected _set(crontime:string): void {
     if (this._cronjob) {
       this.stop();
     }
     this._crontime = crontime;
-    this._message = message;
 
     this._cronjob = new Cron.CronJob(this.time, () => {
       if (this._running) {
-        this._bot.say(this.message, this.channel);
+        this.exec();
       }
     });
     if (this._running) {
@@ -52,14 +46,9 @@ class Job {
     this._cronjob.stop();
   }
 
-
-  get text(): string {
-    return this._message;
-  }
-
   get running(): boolean {
     return this._running;
   }
 }
 
-export=Job;
+export=BaseJob;

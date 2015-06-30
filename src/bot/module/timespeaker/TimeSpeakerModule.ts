@@ -3,7 +3,7 @@
 import IModule = require("../IModule");
 import SlackBot = require("../../SlackBot");
 import ICommandMessage = require("../../message/ICommandMessage");
-import Job = require("./Job");
+import SpeakJob = require("./SpeakJob");
 
 import fs = require("fs");
 
@@ -17,7 +17,7 @@ interface ICronMessage {
 
 
 class TimeSpeakerModule implements IModule {
-  private _jobList:Array<Job> = [];
+  private _jobList:Array<SpeakJob> = [];
   private _path:string;
   private _channel:string;
 
@@ -26,7 +26,7 @@ class TimeSpeakerModule implements IModule {
   constructor(private _bot:SlackBot){
     this._path = "./etc/" + this.name;
 
-    // Job保存用パスの確認
+    // SpeakJob保存用パスの確認
     if (!fs.existsSync(this._path)) {
       fs.mkdirSync(this._path);
     }
@@ -70,11 +70,11 @@ class TimeSpeakerModule implements IModule {
       return;
     }
 
-    this._startJob(targetId);
+    this._startSpeakJob(targetId);
 
   }
 
-  private _startJob(id:number): void {
+  private _startSpeakJob(id:number): void {
     if (!this._jobList[id]) {
       this._bot.say("Unknown job id : " + id, this._channel);
       return;
@@ -112,10 +112,10 @@ class TimeSpeakerModule implements IModule {
       return;
     }
 
-    this._stopJob(targetId);
+    this._stopSpeakJob(targetId);
   }
 
-  private _stopJob(id:number): void {
+  private _stopSpeakJob(id:number): void {
     if (!this._jobList[id]) {
       this._bot.say("Unknown job id : " + id, this._channel);
       return;
@@ -159,10 +159,10 @@ class TimeSpeakerModule implements IModule {
     if (!cronMessage) {
       return;
     }
-    var job:Job;
+    var job:SpeakJob;
     if (isNaN(cronMessage.id) || !this._jobList[cronMessage.id]) {
       // 新規ジョブ作成
-      job = new Job(this._bot, cronMessage.time, cronMessage.channel, cronMessage.message);
+      job = new SpeakJob(cronMessage.time,this._bot, cronMessage.channel, cronMessage.message);
       job.start();
       this._jobList.push(job);
     }else {
