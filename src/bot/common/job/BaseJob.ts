@@ -38,6 +38,10 @@ class BaseJob {
       throw new Error("Job not initialized.");
       return;
     }
+    if (this._running) {
+      return;
+    }
+
     this._running = true;
     this._cronjob.start();
   }
@@ -47,6 +51,10 @@ class BaseJob {
       throw new Error("Job not initialized.");
       return;
     }
+    if (!this._running) {
+      return;
+    }
+
     this._running = false;
     this._cronjob.stop();
   }

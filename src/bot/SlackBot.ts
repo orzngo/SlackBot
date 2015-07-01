@@ -8,6 +8,7 @@ import ICommandMessage = require("./message/ICommandMessage");
 import EchoModule = require("./module/echo/EchoModule");
 import TimeSpeakerModule = require("./module/timespeaker/TimeSpeakerModule");
 import OmikujiModule = require("./module/omikuji/OmikujiModule");
+import OtenkiModule = require("./module/otenki/OtenkiModule");
 import fs = require("fs");
 
 var Slack = require('slack-node');
@@ -60,6 +61,7 @@ class SlackBot {
     this._modules.push(new EchoModule(this));
     this._modules.push(new TimeSpeakerModule(this));
     this._modules.push(new OmikujiModule(this));
+    this._modules.push(new OtenkiModule(this));
 
     for (var key in this._modules) {
       var mod = this._modules[key];

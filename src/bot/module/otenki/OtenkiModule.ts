@@ -1,36 +1,148 @@
+///<reference path = "../../../../typings/node/node.d.ts" />
+import http = require("http");
+
 import IModule = require("../IModule");
 import ICommandMessage = require("../../message/ICommandMessage");
 import SlackBot = require("../../SlackBot");
 import BaseJob = require("../../common/job/BaseJob");
 
+interface WeatherStatus {
+  date: Date;
+  status: string;
+  description: string;
+}
+
+var WeatherString:{[x:string]: string} = {
+  "Snow": "雪",
+  "Rain": "雨"
+}
+
 class OtenkiModule implements IModule {
-  private _apiURL:string = "http://api.openweathermap.org/data/2.5/weather?q=Tokyo,jp";
-  private _job:BaseJob;
+  private _apiURL: string = "http://api.openweathermap.org/data/2.5/forecast?q=Tokyo,JP";
+  private _webIURL: string = "http://openweathermap.org/city/1850147";
+  private _job: BaseJob;
 
   constructor(private _bot:SlackBot){
     var status:string = _bot.load(this.name, "status");
     this._job = new BaseJob();
+    this._job.set("0 12 * * 1-5", () => {this.check()});
     if (status && status === "x") {
+      this._job.stop();
     } else {
+      this._job.start();
     }
   }
 
   public exec(message:ICommandMessage):void {
-    if (!message.message || message.message.length === 0) {
-      return;
+    switch (message.options[0]) {
+      case undefined:
+        this._bot.say("お天気情報を取得します。時間がかかる事があるので、黙ってお待ちください。", message.channel);
+        this.check(message.channel);
+        break;
+      case "start":
+        this._job.start();
+        this._bot.save("o", this.name, "status");
+        this._bot.say("お天気監視を始めました", message.channel);
+        break;
+      case "stop":
+        this._job.stop();
+        this._bot.save("x", this.name, "status");
+        this._bot.say("お天気監視を止めました", message.channel);
+        break;
+      case "status":
+        this._bot.say("監視：" + this._job.running, message.channel);
+        break;
+      default :
+        this._bot.say("Unknown Option " + message.options[0], message.channel);
+        break;
     }
   }
+
+  /**
+   * お天気のチェックを行います
+   *
+   * @param channel:string 発言するチャンネルです。通常はcronで実行されるため、デフォルトチャンネルに発言します
+   */
+  public check(channel:string = undefined): void {
+    http.get(this._apiURL, (res:http.IncomingMessage) => {
+      var result:string = "";
+      res.on("data", (data:string) => {
+        result += data;
+      }).on("end", () => {
+        var weathers = this._parse(result);
+        if (!weathers || weathers.length !== 3) {
+          this._bot.say("お天気情報の取得に失敗しました。", channel);
+          return;
+        }
+
+        var text = "";
+        var rainFlag = false;//連続して雨と表示しない為のフラグ。
+        for (var key in weathers) {
+          var weather = weathers[key];
+          var status = weather.status;
+          if ((status === "Rain" || status === "Snow")) {
+            if (rainFlag) {
+              continue;
+            }
+            text += "```" + weather.date.getHours() + "時から３時間以内に、" + WeatherString[status] + "が降りそうです。("+ weather.description + ")```\n";
+          } else {
+            if (!rainFlag) {
+              continue;
+            }
+            text += "```" + weather.date.getHours() + "時から３時間以内に、天気は回復しそうです```\n";
+            rainFlag = false;
+          }
+        }
+
+        if (text.length <= 0) {
+          text = "```直近９時間、雨の予報は無いようです。```\n";
+        } else {
+          text += "詳細：" + this._webIURL;
+        }
+        this._bot.say(text, channel);
+      });
+    }).on("error", (e:any) => {
+      this._bot.say("お天気情報の取得に失敗しました。", channel);
+      console.log(e);
+    });
+  }
+
+  /**
+   * apiのパース部分
+   */
+  private _parse(data:string): Array<WeatherStatus> {
+    var result:WeatherStatus[] = [];
+    try {
+      var json:any = JSON.parse(data);
+      var list:any = json.list;
+      for (var i=0; i < 3 ; i++) {
+        var date = new Date(list[i].dt * 1000);
+        var weather:WeatherStatus = {
+          date: date,
+          status: list[i].weather[0].main,
+          description: list[i].weather[0].description
+        }
+        result.push(weather);
+      }
+    } catch(e) {
+      console.log("parse error");
+      return null;
+    }
+    return result;
+  }
+
 
   get name():string {
     return "otenki";
   }
   get description():string {
-    return "東京に雨か雪が降り始めたらお知らせします。土日は休みです";
+    return "直近９時間以内に雨が降りそうかどうかチェックします";
   }
   get usage():string {
-    return "@botname otenki.start   お天気監視を始めます\n"
+    return "@botname otenki         直近９時間に雨が降るかどうかチェックします\n"
+         + "@botname otenki.start   お天気監視を始めます\n"
          + "@botname otenki.stop    お天気監視をやめます\n"
-         + "@botname otenki.status  現在の天気情報と、監視状態を出力します";
+         + "@botname otenki.status  監視状態を出力します";
   }
 }
 
