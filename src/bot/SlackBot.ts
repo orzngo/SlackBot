@@ -101,11 +101,13 @@ class SlackBot {
       return;
     }
 
+    /*
     // 自分自身の発言はスルーする
     if (message.user === this._id) {
       this._homeChannelId = message.channel;
       return
     }
+    */
 
 
     var commandMessage = this._parseMessage(message);

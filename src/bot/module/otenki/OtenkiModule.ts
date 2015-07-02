@@ -13,8 +13,10 @@ interface WeatherStatus {
 }
 
 var WeatherString:{[x:string]: string} = {
-  "Snow": "雪",
-  "Rain": "雨"
+  "Snow": ":snowman:",
+  "Rain": ":umbrella:",
+  "Clear": ":sunny:",
+  "Clouds": ":cloud:"
 }
 
 class OtenkiModule implements IModule {
@@ -26,11 +28,14 @@ class OtenkiModule implements IModule {
     var status:string = _bot.load(this.name, "status");
     this._job = new BaseJob();
     this._job.set("0 12 * * 1-5", () => {this.check()});
+    this._job.stop();
+    /*
     if (status && status === "x") {
       this._job.stop();
     } else {
       this._job.start();
     }
+    */
   }
 
   public exec(message:ICommandMessage):void {
@@ -39,6 +44,7 @@ class OtenkiModule implements IModule {
         this._bot.say("お天気情報を取得します。時間がかかる事があるので、黙ってお待ちください。", message.channel);
         this.check(message.channel);
         break;
+        /*
       case "start":
         this._job.start();
         this._bot.save("o", this.name, "status");
@@ -52,6 +58,7 @@ class OtenkiModule implements IModule {
       case "status":
         this._bot.say("監視：" + this._job.running, message.channel);
         break;
+        */
       default :
         this._bot.say("Unknown Option " + message.options[0], message.channel);
         break;
@@ -70,7 +77,7 @@ class OtenkiModule implements IModule {
         result += data;
       }).on("end", () => {
         var weathers = this._parse(result);
-        if (!weathers || weathers.length !== 3) {
+        if (!weathers || weathers.length !== 4) {
           this._bot.say("お天気情報の取得に失敗しました。", channel);
           return;
         }
@@ -80,25 +87,11 @@ class OtenkiModule implements IModule {
         for (var key in weathers) {
           var weather = weathers[key];
           var status = weather.status;
-          if ((status === "Rain" || status === "Snow")) {
-            if (rainFlag) {
-              continue;
-            }
-            text += "```" + weather.date.getHours() + "時から３時間以内に、" + WeatherString[status] + "が降りそうです。("+ weather.description + ")```\n";
-          } else {
-            if (!rainFlag) {
-              continue;
-            }
-            text += "```" + weather.date.getHours() + "時から３時間以内に、天気は回復しそうです```\n";
-            rainFlag = false;
-          }
+          var hour = weather.date.getHours();
+          text += "| " + hour + "-" + (hour+3) + "時：" + WeatherString[status] + " ";
         }
 
-        if (text.length <= 0) {
-          text = "```直近９時間、雨の予報は無いようです。```\n";
-        } else {
-          text += "詳細：" + this._webIURL;
-        }
+        text += "\n詳細：" + this._webIURL;
         this._bot.say(text, channel);
       });
     }).on("error", (e:any) => {
@@ -115,7 +108,7 @@ class OtenkiModule implements IModule {
     try {
       var json:any = JSON.parse(data);
       var list:any = json.list;
-      for (var i=0; i < 3 ; i++) {
+      for (var i=0; i < 4 ; i++) {
         var date = new Date(list[i].dt * 1000);
         var weather:WeatherStatus = {
           date: date,
@@ -136,13 +129,15 @@ class OtenkiModule implements IModule {
     return "otenki";
   }
   get description():string {
-    return "直近９時間以内に雨が降りそうかどうかチェックします";
+    return "直近半日くらいの天気を表示します";
   }
   get usage():string {
-    return "@botname otenki         直近９時間に雨が降るかどうかチェックします\n"
+    return "@botname otenki         直近半日くらいの天気を表示します\n";
+    /*
          + "@botname otenki.start   お天気監視を始めます\n"
          + "@botname otenki.stop    お天気監視をやめます\n"
          + "@botname otenki.status  監視状態を出力します";
+         */
   }
 }
 
