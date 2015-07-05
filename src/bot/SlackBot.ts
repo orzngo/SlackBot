@@ -122,7 +122,7 @@ class SlackBot {
 
     console.log(commandMessage);
     if (!this._commands[commandMessage.command]) {
-      this.say(commandMessage.command + " : Unknown Command.", commandMessage.channel);
+      this.say(commandMessage.command + " : Unknown Command. \n使えるコマンド一覧を見るにはcommandsと入力してください", commandMessage.channel);
       return;
     }
 
@@ -182,6 +182,7 @@ class SlackBot {
       usage: "@botname commands",
       exec: (message:ICommandMessage) => {
         var result:string[] = [];
+        result.push("コマンド名に続けて.?と入力すると、そのコマンドの使い方を出力します。例：commands.?\n");
 
         for (var key in this._commands) {
           result.push(key + " : " + this._commands[key].description);
