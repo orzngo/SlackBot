@@ -10,6 +10,7 @@ interface WeatherStatus {
   date: Date;
   status: string;
   description: string;
+  maxTemp: number;
 }
 
 var WeatherString:{[x:string]: string} = {
@@ -71,7 +72,8 @@ class OtenkiModule implements IModule {
           var weather = weathers[key];
           var status = weather.status;
           var hour = weather.date.getHours();
-          text += "| " + hour + "-" + (hour+3) + "時：" + WeatherString[status] + " ";
+          var maxTemp = weather.maxTemp.toFixed(0);
+          text += "| " + hour + "-" + (hour+3) + "時：" + WeatherString[status] + "("+ maxTemp +"℃) ";
         }
         this._bot.say(text, channel);
       });
@@ -94,7 +96,8 @@ class OtenkiModule implements IModule {
         var weather:WeatherStatus = {
           date: date,
           status: list[i].weather[0].main,
-          description: list[i].weather[0].description
+          description: list[i].weather[0].description,
+          maxTemp: list[i].main.temp_max - 273
         }
         result.push(weather);
       }
