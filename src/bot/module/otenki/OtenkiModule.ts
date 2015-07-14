@@ -29,13 +29,6 @@ class OtenkiModule implements IModule {
     this._job = new BaseJob();
     this._job.set("0 12 * * 1-5", () => {this.check()});
     this._job.stop();
-    /*
-    if (status && status === "x") {
-      this._job.stop();
-    } else {
-      this._job.start();
-    }
-    */
   }
 
   public exec(message:ICommandMessage):void {
@@ -44,21 +37,11 @@ class OtenkiModule implements IModule {
         this._bot.say("お天気情報を取得します。時間がかかる事があるので、黙ってお待ちください。", message.channel);
         this.check(message.channel);
         break;
-        /*
-      case "start":
-        this._job.start();
-        this._bot.save("o", this.name, "status");
-        this._bot.say("お天気監視を始めました", message.channel);
+      case "web":
+        this._bot.say(this._webIURL, message.channel);
         break;
-      case "stop":
-        this._job.stop();
-        this._bot.save("x", this.name, "status");
-        this._bot.say("お天気監視を止めました", message.channel);
+      case "d":
         break;
-      case "status":
-        this._bot.say("監視：" + this._job.running, message.channel);
-        break;
-        */
       default :
         this._bot.say("Unknown Option " + message.options[0], message.channel);
         break;
@@ -90,8 +73,6 @@ class OtenkiModule implements IModule {
           var hour = weather.date.getHours();
           text += "| " + hour + "-" + (hour+3) + "時：" + WeatherString[status] + " ";
         }
-
-        text += "\n詳細：" + this._webIURL;
         this._bot.say(text, channel);
       });
     }).on("error", (e:any) => {
@@ -132,9 +113,9 @@ class OtenkiModule implements IModule {
     return "直近半日くらいの天気を表示します";
   }
   get usage():string {
-    return "@botname otenki         直近半日くらいの天気を表示します\n";
-    /*
-         + "@botname otenki.start   お天気監視を始めます\n"
+    return "@botname otenki         直近半日くらいの天気を表示します\n"
+         + "@botname otenki.web       お天気サイトのURLを表示します\n";
+         /*
          + "@botname otenki.stop    お天気監視をやめます\n"
          + "@botname otenki.status  監視状態を出力します";
          */
