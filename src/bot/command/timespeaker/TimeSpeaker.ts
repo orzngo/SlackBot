@@ -1,6 +1,6 @@
 ///<reference path="../../../../typings/node/node.d.ts" />
 
-import IModule = require("../IModule");
+import ICommand = require("../ICommand");
 import SlackBot = require("../../SlackBot");
 import ICommandMessage = require("../../message/ICommandMessage");
 import SpeakJob = require("./SpeakJob");
@@ -16,7 +16,7 @@ interface ICronMessage {
 }
 
 
-class TimeSpeakerModule implements IModule {
+class TimeSpeaker implements ICommand {
   private _jobList:Array<SpeakJob> = [];
   private _path:string;
   private _channel:string;
@@ -283,4 +283,4 @@ class TimeSpeakerModule implements IModule {
   }
 }
 
-export=TimeSpeakerModule;
+export=TimeSpeaker;

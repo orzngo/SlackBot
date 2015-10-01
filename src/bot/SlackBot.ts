@@ -1,14 +1,14 @@
 ///<reference path="../../typings/node/node.d.ts" />
 
 import IConfig = require('../config/IConfig');
-import IModule = require("./module/IModule");
+import ICommand = require("./command/ICommand");
 import IRTMMessage = require("./message/IRTMMessage");
 import ICommandMessage = require("./message/ICommandMessage");
 
-import EchoModule = require("./module/echo/EchoModule");
-import TimeSpeakerModule = require("./module/timespeaker/TimeSpeakerModule");
-import OmikujiModule = require("./module/omikuji/OmikujiModule");
-import OtenkiModule = require("./module/otenki/OtenkiModule");
+import EchoCommand = require("./command/echo/Echo");
+import TimeSpeakerCommand = require("./command/timespeaker/TimeSpeaker");
+import OmikujiCommand = require("./command/omikuji/Omikuji");
+import OtenkiCommand = require("./command/otenki/Otenki");
 import fs = require("fs");
 
 var Slack = require('slack-node');
@@ -21,8 +21,7 @@ class SlackBot {
   private _name:string;
   private _homeChannelId:string;
 
-  private _modules:IModule[];
-  private _commands:{[key:string]: IModule};
+  private _commands:{[key:string]: ICommand};
 
   // このフラグがfalseのときは、何も喋らなくなります。
   private _active:boolean = true;
@@ -40,9 +39,9 @@ class SlackBot {
 
     this._commands = {};
 
-    this._commands["commands"] = this._helpModule();
-    this._commands["die"] = this._dieModule();
-    this._commands["resurrect"] = this._resurrectModule();
+    this._commands["commands"] = this._helpCommand();
+    this._commands["die"] = this._dieCommand();
+    this._commands["resurrect"] = this._resurrectCommand();
     this._slackAPI.api('auth.test',{}, (error:any, resp:any) => {
       if (error) {
         console.log("Auth.test error!!");
@@ -51,20 +50,20 @@ class SlackBot {
 
       this._name = resp.user;
       this._id = resp.user_id;
-      this._loadModule();
+      this._loadCommand();
       this._initializedMessage();
     });
   }
 
-  private _loadModule(): void {
-    this._modules = [];
-    this._modules.push(new EchoModule(this));
-    this._modules.push(new TimeSpeakerModule(this));
-    this._modules.push(new OmikujiModule(this));
-    this._modules.push(new OtenkiModule(this));
+  private _loadCommand(): void {
+    var modules:ICommand[] = [];
+    modules.push(new EchoCommand(this));
+    modules.push(new TimeSpeakerCommand(this));
+    modules.push(new OmikujiCommand(this));
+    modules.push(new OtenkiCommand(this));
 
-    for (var key in this._modules) {
-      var mod = this._modules[key];
+    for (var key in modules) {
+      var mod = modules[key];
       var command = mod.name;
       this._commands[command] = mod;
     }
@@ -175,7 +174,7 @@ class SlackBot {
     return result;
   }
 
-  private _helpModule():IModule {
+  private _helpCommand():ICommand {
     return {
       name: "commands",
       description: "登録済みのコマンド一覧を表示します",
@@ -194,7 +193,7 @@ class SlackBot {
     }
   }
 
-  private _dieModule():IModule {
+  private _dieCommand():ICommand {
     return {
       name: "die",
       description: "死んで何も喋らなくなります。起こすときはresurrect",
@@ -211,7 +210,7 @@ class SlackBot {
     }
   }
 
-  private _resurrectModule():IModule {
+  private _resurrectCommand():ICommand {
     return {
       name: "resurrect",
       description: "喋らなくなったBotを元通りにします。",

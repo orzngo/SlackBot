@@ -1,6 +1,7 @@
 import ICommandMessage = require("../message/ICommandMessage");
 
-interface IModule {
+// ユーザーからの呼び出しによって、何らかの動作を行うもの
+interface ICommand {
   name:string;
   description:string;
   usage:string;
@@ -8,4 +9,4 @@ interface IModule {
   exec(message:ICommandMessage): void;
 }
 
-export=IModule;
+export=ICommand;

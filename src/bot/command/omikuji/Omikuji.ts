@@ -1,8 +1,8 @@
-import IModule = require("../IModule");
+import ICommand = require("../ICommand");
 import ICommandMessage = require("../../message/ICommandMessage");
 import SlackBot = require("../../SlackBot");
 
-class OmikujiModule implements IModule {
+class Omikuji implements ICommand {
   constructor(private _bot:SlackBot){
   }
 
@@ -71,4 +71,4 @@ class OmikujiModule implements IModule {
   }
 }
 
-export=OmikujiModule;
+export=Omikuji;

@@ -1,8 +1,8 @@
-import IModule = require("../IModule");
+import ICommand = require("../ICommand");
 import ICommandMessage = require("../../message/ICommandMessage");
 import SlackBot = require("../../SlackBot");
 
-class EchoModule implements IModule {
+class Echo implements ICommand {
   constructor(private _bot:SlackBot){
   }
 
@@ -33,4 +33,4 @@ class EchoModule implements IModule {
   }
 }
 
-export=EchoModule;
+export=Echo;

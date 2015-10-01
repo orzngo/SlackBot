@@ -1,7 +1,7 @@
 ///<reference path = "../../../../typings/node/node.d.ts" />
 import http = require("http");
 
-import IModule = require("../IModule");
+import ICommand = require("../ICommand");
 import ICommandMessage = require("../../message/ICommandMessage");
 import SlackBot = require("../../SlackBot");
 import BaseJob = require("../../common/job/BaseJob");
@@ -20,7 +20,7 @@ var WeatherString:{[x:string]: string} = {
   "Clouds": ":cloud:"
 }
 
-class OtenkiModule implements IModule {
+class Otenki implements ICommand {
   private _apiURL: string = "http://api.openweathermap.org/data/2.5/forecast?q=Tokyo,JP";
   private _webIURL: string = "http://openweathermap.org/city/1850147";
   private _job: BaseJob;
@@ -125,4 +125,4 @@ class OtenkiModule implements IModule {
   }
 }
 
-export=OtenkiModule;
+export=Otenki;
