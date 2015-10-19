@@ -9,3 +9,5 @@ interface ISlackUser {
   has_2fa: boolean;
   has_files: boolean;
 }
+
+export=ISlackUser;
