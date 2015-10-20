@@ -3,9 +3,9 @@
 import ICommand = require("../ICommand");
 import SlackBot = require("../../SlackBot");
 import ICommandMessage = require("../../message/ICommandMessage");
+import IBotSayClient = require("../../client/say/IBotSayClient");
 import SpeakJob = require("./SpeakJob");
-
-import fs = require("fs");
+import ModuleStorage = require("../../module/storage/ModuleStorage");
 
 interface ICronMessage {
   id: number;
@@ -21,15 +21,13 @@ class TimeSpeaker implements ICommand {
   private _path:string;
   private _channel:string;
 
+  private _storage:ModuleStorage;
+
   private _running:Boolean = true;
 
-  constructor(private _bot:SlackBot){
-    this._path = "./etc/" + this.name;
+  constructor(private _client:IBotSayClient){
+    this._storage = new ModuleStorage(this);
 
-    // SpeakJob保存用パスの確認
-    if (!fs.existsSync(this._path)) {
-      fs.mkdirSync(this._path);
-    }
     this._load();
   }
 
@@ -50,13 +48,13 @@ class TimeSpeaker implements ICommand {
         break;
       case "list":
           var list = this._list()
-          this._bot.say((list.length > 0) ? list : "empty", this._channel);
+          this._client.say((list.length > 0) ? list : "empty", this._channel);
         break;
       case "unset":
         this._unset(message);
         break;
       default:
-        this._bot.say("Unknown Option :" + message.options[0], this._channel);
+        this._client.say("Unknown Option :" + message.options[0], this._channel);
     }
   }
 
@@ -76,30 +74,30 @@ class TimeSpeaker implements ICommand {
 
   private _startSpeakJob(id:number): void {
     if (!this._jobList[id]) {
-      this._bot.say("Unknown job id : " + id, this._channel);
+      this._client.say("Unknown job id : " + id, this._channel);
       return;
     }
     this._jobList[id].start();
-    this._bot.say("job id : " + id + " started.", this._channel);
+    this._client.say("job id : " + id + " started.", this._channel);
     this._save();
   }
 
   private _startSelf(): void {
     if (!this._running) {
       this._running = true;
-      this._bot.say("Started.", this._channel);
+      this._client.say("Started.", this._channel);
       return;
     }
-    this._bot.say("Already started.", this._channel);
+    this._client.say("Already started.", this._channel);
   }
 
 
   private _set(message:ICommandMessage) {
     var res = this._create(this._parseCommandMessage(message));
     if (!res) {
-      this._bot.say("command set failed.", this._channel);
+      this._client.say("command set failed.", this._channel);
     } else {
-      this._bot.say("I will say " + res.message + " at here.", this._channel);
+      this._client.say("I will say " + res.message + " at here.", this._channel);
     }
   }
 
@@ -117,11 +115,11 @@ class TimeSpeaker implements ICommand {
 
   private _stopSpeakJob(id:number): void {
     if (!this._jobList[id]) {
-      this._bot.say("Unknown job id : " + id, this._channel);
+      this._client.say("Unknown job id : " + id, this._channel);
       return;
     }
     this._jobList[id].stop();
-    this._bot.say("job id : " + id + " stopped.", this._channel);
+    this._client.say("job id : " + id + " stopped.", this._channel);
     this._save();
   }
 
@@ -129,14 +127,14 @@ class TimeSpeaker implements ICommand {
   private _stopSelf(): void {
     if (this._running) {
       this._running = false;
-      this._bot.say("Stopped.", this._channel);
+      this._client.say("Stopped.", this._channel);
       return;
     }
-    this._bot.say("Already stopped.", this._channel);
+    this._client.say("Already stopped.", this._channel);
   }
 
   private _status(message:ICommandMessage): void {
-    this._bot.say("running = " + String(this._running), this._channel);
+    this._client.say("running = " + String(this._running), this._channel);
   }
 
   private _list():string {
@@ -162,7 +160,7 @@ class TimeSpeaker implements ICommand {
     var job:SpeakJob;
     if (isNaN(cronMessage.id) || !this._jobList[cronMessage.id]) {
       // 新規ジョブ作成
-      job = new SpeakJob(cronMessage.time,this._bot, cronMessage.channel, cronMessage.message);
+      job = new SpeakJob(cronMessage.time,this._client, cronMessage.channel, cronMessage.message);
       job.start();
       this._jobList.push(job);
     }else {
@@ -209,7 +207,7 @@ class TimeSpeaker implements ICommand {
     var id = Number(message.options[1]);
 
     if (isNaN(id) || !this._jobList[id]) {
-      this._bot.say("Unknown job id : " + id, this._channel);
+      this._client.say("Unknown job id : " + id, this._channel);
       return;
     }
 
@@ -217,16 +215,16 @@ class TimeSpeaker implements ICommand {
     delete this._jobList[id];
 
     this._save();
-    this._bot.say("job id : " + id + " deleted.", this._channel);
+    this._client.say("job id : " + id + " deleted.", this._channel);
   }
 
   private _save(): void {
-    this._bot.save(this._list(), this.name, "job");
+    this._storage.save(this._list(), "job");
   }
 
   private _load(): void {
     try{
-      var file = this._bot.load(this.name, "job").split("\n");
+      var file = this._storage.load("job").split("\n");
       for (var key in file) {
         this._create(this._parseSaveMessage(file[key]));
       }

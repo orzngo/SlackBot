@@ -1,12 +1,12 @@
 ///<reference path="../../../../typings/node/node.d.ts" />
 
-import SlackBot = require("../../SlackBot");
 import BaseJob = require("../../common/job/BaseJob");
+import IBotSayClient = require("../../client/say/IBotSayClient");
 
 class SpeakJob {
   private _job:BaseJob;
 
-  constructor(private _crontime:string, private _bot:SlackBot, private _channel:string, private _message:string) {
+  constructor(private _crontime:string, private _client:IBotSayClient, private _channel:string, private _message:string) {
     this._job = new BaseJob();
     this.set(_crontime, _message);
   }
@@ -20,7 +20,7 @@ class SpeakJob {
   }
 
   public exec(): void {
-    this._bot.say(this.message, this.channel);
+    this._client.say(this.message, this.channel);
   }
 
   public set(crontime:string, message:string): void {

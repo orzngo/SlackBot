@@ -3,7 +3,8 @@ import http = require("http");
 
 import ICommand = require("../ICommand");
 import ICommandMessage = require("../../message/ICommandMessage");
-import SlackBot = require("../../SlackBot");
+import IBotSayClient = require("../../client/say/IBotSayClient");
+import ModuleStorage = require("../../module/storage/ModuleStorage");
 import BaseJob = require("../../common/job/BaseJob");
 
 interface WeatherStatus {
@@ -25,8 +26,12 @@ class Otenki implements ICommand {
   private _webIURL: string = "http://openweathermap.org/city/1850147";
   private _job: BaseJob;
 
-  constructor(private _bot:SlackBot){
-    var status:string = _bot.load(this.name, "status");
+  private _storage:ModuleStorage;
+
+  constructor(private _client:IBotSayClient){
+    this._storage = new ModuleStorage(this);
+    
+    var status:string = this._storage.load("status");
     this._job = new BaseJob();
     this._job.set("0 12 * * 1-5", () => {this.check()});
     this._job.stop();
@@ -35,16 +40,16 @@ class Otenki implements ICommand {
   public exec(message:ICommandMessage):void {
     switch (message.options[0]) {
       case undefined:
-        this._bot.say("お天気情報を取得します。時間がかかる事があるので、黙ってお待ちください。", message.channel);
+        this._client.say("お天気情報を取得します。時間がかかる事があるので、黙ってお待ちください。", message.channel);
         this.check(message.channel);
         break;
       case "web":
-        this._bot.say(this._webIURL, message.channel);
+        this._client.say(this._webIURL, message.channel);
         break;
       case "d":
         break;
       default :
-        this._bot.say("Unknown Option " + message.options[0], message.channel);
+        this._client.say("Unknown Option " + message.options[0], message.channel);
         break;
     }
   }
@@ -62,7 +67,7 @@ class Otenki implements ICommand {
       }).on("end", () => {
         var weathers = this._parse(result);
         if (!weathers || weathers.length !== 4) {
-          this._bot.say("お天気情報の取得に失敗しました。", channel);
+          this._client.say("お天気情報の取得に失敗しました。", channel);
           return;
         }
 
@@ -75,10 +80,10 @@ class Otenki implements ICommand {
           var maxTemp = weather.maxTemp.toFixed(0);
           text += "| " + hour + "-" + (hour+3) + "時：" + WeatherString[status] + "("+ maxTemp +"℃) ";
         }
-        this._bot.say(text, channel);
+        this._client.say(text, channel);
       });
     }).on("error", (e:any) => {
-      this._bot.say("お天気情報の取得に失敗しました。", channel);
+      this._client.say("お天気情報の取得に失敗しました。", channel);
       console.log(e);
     });
   }
