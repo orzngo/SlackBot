@@ -4,7 +4,7 @@ import IConfig = require('../config/IConfig');
 import ICommand = require("./command/ICommand");
 import IRTMMessage = require("./message/IRTMMessage");
 import ICommandMessage = require("./message/ICommandMessage");
-
+import BotSayClient = require("./client/say/BotSayClient");
 import EchoCommand = require("./command/echo/Echo");
 import TimeSpeakerCommand = require("./command/timespeaker/TimeSpeaker");
 import OmikujiCommand = require("./command/omikuji/Omikuji");
@@ -20,6 +20,8 @@ class SlackBot {
   private _id:string;
   private _name:string;
   private _homeChannelId:string;
+
+  private _sayClient:BotSayClient;
 
   private _commands:{[key:string]: ICommand};
 
@@ -50,6 +52,10 @@ class SlackBot {
 
       this._name = resp.user;
       this._id = resp.user_id;
+
+      this._sayClient = new BotSayClient(this);
+
+
       this._loadCommand();
       this._initializedMessage();
     });
@@ -57,9 +63,9 @@ class SlackBot {
 
   private _loadCommand(): void {
     var modules:ICommand[] = [];
-    modules.push(new EchoCommand(this));
+    modules.push(new EchoCommand(this._sayClient));
     modules.push(new TimeSpeakerCommand(this));
-    modules.push(new OmikujiCommand(this));
+    modules.push(new OmikujiCommand(this._sayClient));
     modules.push(new OtenkiCommand(this));
 
     for (var key in modules) {

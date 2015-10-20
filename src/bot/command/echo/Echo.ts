@@ -1,9 +1,9 @@
 import ICommand = require("../ICommand");
 import ICommandMessage = require("../../message/ICommandMessage");
-import SlackBot = require("../../SlackBot");
+import IBotSayClient = require("../../client/say/IBotSayClient");
 
 class Echo implements ICommand {
-  constructor(private _bot:SlackBot){
+  constructor(private _client:IBotSayClient){
   }
 
 
@@ -18,8 +18,9 @@ class Echo implements ICommand {
     if (option.length > 0) {
       text += "  option: " + option;
     }
+    console.log(this._client);
 
-    this._bot.say(text, message.channel);
+    this._client.say(text, message.channel);
   }
 
   get name():string {

@@ -1,9 +1,9 @@
 import ICommand = require("../ICommand");
 import ICommandMessage = require("../../message/ICommandMessage");
-import SlackBot = require("../../SlackBot");
+import IBotSayClient = require("../../client/say/IBotSayClient");
 
 class Omikuji implements ICommand {
-  constructor(private _bot:SlackBot){
+  constructor(private _client:IBotSayClient){
   }
 
 
@@ -16,7 +16,7 @@ class Omikuji implements ICommand {
     var words = text.split(",");
 
     if (words.length <= 0) {
-      this._bot.say("抽選対象を入力してください", message.channel);
+      this._client.say("抽選対象を入力してください", message.channel);
       return;
     }
 
@@ -40,7 +40,7 @@ class Omikuji implements ICommand {
       result += " " + words.pop() + "";
     }
 
-    this._bot.say(result, message.channel);
+    this._client.say(result, message.channel);
   }
 
   private _shuffle(array: string[]): string[] {
