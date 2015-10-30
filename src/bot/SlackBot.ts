@@ -2,7 +2,7 @@
 
 import IConfig = require('../config/IConfig');
 import ICommand = require("./command/ICommand");
-import IRTMMessage = require("./message/IRTMMessage");
+import IRemarkMessage = require("./message/IRemarkMessage");
 import ICommandMessage = require("./message/ICommandMessage");
 import BotSayClient = require("./client/say/BotSayClient");
 import EchoCommand = require("./command/echo/Echo");
@@ -33,10 +33,11 @@ class SlackBot {
 
     //TODO:機能足りなくなったらコイツforkする
     this._slackClient = new SlackClient(this._config.apiToken);
-    this._slackClient.use((message:IRTMMessage, cb:Function) => {
+    this._slackClient.use((message:IRemarkMessage, cb:Function) => {
       this._messageHandler(message);
       cb();
     });
+
     this._slackClient.connect();
 
     this._commands = {};
@@ -101,7 +102,7 @@ class SlackBot {
     return result;
   }
 
-  private _messageHandler(message:IRTMMessage): void {
+  private _messageHandler(message:IRemarkMessage): void {
     if (message.type !== "message") {
       return;
     }
@@ -138,7 +139,7 @@ class SlackBot {
     }
   }
 
-  private _parseMessage(message:IRTMMessage): ICommandMessage {
+  private _parseMessage(message:IRemarkMessage): ICommandMessage {
     var result:ICommandMessage = {
       command:null,
       options:null,
